@@ -5,43 +5,17 @@ workspace "Pong"
         "Release"
     }
 
-project "SDL"
-    location "lib/SDL"
-
-    kind "StaticLib"
-    language "C"
-    cdialect "c99"
-
-    targetdir "bin/%{cfg.buildcfg}"
-
-    includedirs
-    {
-        "include/"
-    }
-
-    files 
-    {  
-        "src/**.c" 
-    }
-
-    filter "configurations:Debug"      
-        defines { "DEBUG" }      
-        symbols "On"
-    filter "configurations:Release"      
-        defines { "NDEBUG" }      
-        optimize "On"
-
 project "Pong"
     kind "ConsoleApp"
     language "C"
     cdialect "c99"
+    staticruntime "on"
 
     targetdir "bin/%{cfg.buildcfg}"
 
     includedirs
     {
-        "src/",
-        "include/"
+        "src/"
     }
 
     files 
@@ -52,7 +26,7 @@ project "Pong"
 
     links
     {
-        "SDL"
+        "SDL2"
     }
 
     filter "configurations:Debug"      
