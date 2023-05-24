@@ -7,6 +7,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "random.h"
+
 /* Stolen from https://stackoverflow.com/a/4415646 */
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
@@ -24,6 +26,8 @@ int main(int argc, char** argv)
 {
     (void) argc;
     (void) argv;
+
+    pcg32_random_t rng = PCG32_INITIALIZER;
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("SDL_Init(): %s", SDL_GetError());
