@@ -26,7 +26,8 @@ project "Pong"
 
     links
     {
-        "SDL2"
+        "SDL2",
+        "m"
     }
 
     filter "configurations:Debug"      
