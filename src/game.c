@@ -172,7 +172,7 @@ bool game_update(struct game_state* game_state, SDL_Renderer* renderer)
     }
     else if (SDL_HasIntersection(&game_state->paddles[1], &ballRect)) {
         game_state->ball.velocity.x *= -1;
-        game_state->ball.position.x += 1;
+        game_state->ball.position.x -= 1;
     }
 
     return true;
