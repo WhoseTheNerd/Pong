@@ -205,8 +205,15 @@ bool game_render(SDL_Renderer* renderer, struct game_state* game_state)
         return false;
     }
 
-    SDL_RenderCopy(renderer, game_state->player_score_textures[0], NULL, &game_state->player_score_rects[0]);
-    SDL_RenderCopy(renderer, game_state->player_score_textures[1], NULL, &game_state->player_score_rects[1]);
+    if (SDL_RenderCopy(renderer, game_state->player_score_textures[0], NULL, &game_state->player_score_rects[0]) != 0) {
+        SDL_Log("SDL_RenderCopy(): %s", SDL_GetError());
+        return false;
+    }
+
+    if (SDL_RenderCopy(renderer, game_state->player_score_textures[1], NULL, &game_state->player_score_rects[1]) != 0) {
+        SDL_Log("SDL_RenderCopy(): %s", SDL_GetError());
+        return false;
+    }
 
     SDL_RenderPresent(renderer);
 
