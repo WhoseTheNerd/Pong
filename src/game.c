@@ -2,8 +2,6 @@
 
 #include "config.h"
 
-#include <math.h>
-
 static int RenderCircle(SDL_Renderer* renderer, SDL_Point center_point, int radius, SDL_Color color);
 
 static float to_radians(float degrees)
@@ -36,22 +34,25 @@ bool game_init(struct game_state* game_state, pcg32_random_t* rng)
     const uint32_t dir = pcg32_random_ranged(game_state->rng, 0, 3);
 
     if (dir == 0) {
-        game_state->ball.velocity.x = sinf(to_radians(45.0f));
-        game_state->ball.velocity.y = cosf(to_radians(45.0f));
+        game_state->ball.velocity.x = SDL_sinf(to_radians(45.0f));
+        game_state->ball.velocity.y = SDL_cosf(to_radians(45.0f));
     } else if (dir == 1) {
-        game_state->ball.velocity.x = sinf(to_radians(135.0f));
-        game_state->ball.velocity.y = cosf(to_radians(135.0f));
+        game_state->ball.velocity.x = SDL_sinf(to_radians(135.0f));
+        game_state->ball.velocity.y = SDL_cosf(to_radians(135.0f));
     } else if (dir == 2) {
-        game_state->ball.velocity.x = sinf(to_radians(225.0f));
-        game_state->ball.velocity.y = cosf(to_radians(225.0f));
+        game_state->ball.velocity.x = SDL_sinf(to_radians(225.0f));
+        game_state->ball.velocity.y = SDL_cosf(to_radians(225.0f));
     } else {
-        game_state->ball.velocity.x = sinf(to_radians(315.0f));
-        game_state->ball.velocity.y = cosf(to_radians(315.0f));
+        game_state->ball.velocity.x = SDL_sinf(to_radians(315.0f));
+        game_state->ball.velocity.y = SDL_cosf(to_radians(315.0f));
     }
 
-    const uint32_t speed = pcg32_random_ranged(game_state->rng, 2, 8);
+    const uint32_t speed = pcg32_random_ranged(game_state->rng, 3, 6);
     game_state->ball.velocity.x *= speed;
     game_state->ball.velocity.y *= speed;
+
+    game_state->scoreboard.player_one = 0;
+    game_state->scoreboard.player_two = 0;
 
     return true;
 }
@@ -86,7 +87,43 @@ bool game_update(struct game_state* game_state)
     game_state->ball.position.x += game_state->ball.velocity.x;
     game_state->ball.position.y += game_state->ball.velocity.y;
 
-    
+    if (game_state->ball.position.x < PADDLE_WIDTH + BALL_RADIUS) {
+        // Player 1 scores
+        game_state->scoreboard.player_one += 1;
+        game_state->ball.velocity.x = 0;
+        game_state->ball.velocity.y = 0;
+    }
+    if (game_state->ball.position.x > SCREEN_WIDTH - PADDLE_WIDTH + BALL_RADIUS) {
+        // Player 2 scores
+        game_state->scoreboard.player_two += 1;
+        game_state->ball.velocity.x = 0;
+        game_state->ball.velocity.y = 0;
+    } 
+
+    if (game_state->ball.position.y > SCREEN_HEIGHT - BALL_RADIUS) {
+        game_state->ball.position.y = SCREEN_HEIGHT - BALL_RADIUS;
+        game_state->ball.velocity.y *= -1;
+    }
+    else if (game_state->ball.position.y < BALL_RADIUS) {
+        game_state->ball.position.y = BALL_RADIUS;
+        game_state->ball.velocity.y *= -1;
+    }
+
+    const SDL_Rect ballRect = {
+        .x = game_state->ball.position.x - BALL_RADIUS,
+        .y = game_state->ball.position.y - BALL_RADIUS,
+        .w = BALL_RADIUS * 2,
+        .h = BALL_RADIUS * 2
+    };
+
+    if (SDL_HasIntersection(&game_state->paddles[0], &ballRect)) {
+        game_state->ball.velocity.x *= -1;
+        game_state->ball.position.x += 1;
+    }
+    else if (SDL_HasIntersection(&game_state->paddles[1], &ballRect)) {
+        game_state->ball.velocity.x *= -1;
+        game_state->ball.position.x += 1;
+    }
 
     return true;
 }
@@ -115,6 +152,11 @@ bool game_render(SDL_Renderer* renderer, struct game_state* game_state)
 
     if (RenderCircle(renderer, game_state->ball.position, BALL_RADIUS, game_state->ball.color) != 0) {
         SDL_Log("RenderCircle(): %s", SDL_GetError());
+        return false;
+    }
+
+    if (SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE) != 0) {
+        SDL_Log("SDL_SetRenderDrawColor(): %s", SDL_GetError());
         return false;
     }
 
@@ -149,8 +191,8 @@ static int RenderCircle(SDL_Renderer* renderer, SDL_Point center_point, int radi
     {
         float rotation_angle = (i * segment_rotation_angle);
 
-        vertices[i].position.x = cosf(rotation_angle) * start_x - sinf(rotation_angle) * start_y;
-        vertices[i].position.y = cosf(rotation_angle) * start_y + sinf(rotation_angle) * start_x;
+        vertices[i].position.x = SDL_cosf(rotation_angle) * start_x - SDL_sinf(rotation_angle) * start_y;
+        vertices[i].position.y = SDL_cosf(rotation_angle) * start_y + SDL_sinf(rotation_angle) * start_x;
 
         vertices[i].position.x += center_point.x;
         vertices[i].position.y += center_point.y;

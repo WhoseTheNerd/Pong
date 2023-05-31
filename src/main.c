@@ -1,10 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <inttypes.h>
-#include <time.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #include <SDL2/SDL.h>
 
@@ -12,13 +10,36 @@
 #include "game.h"
 #include "config.h"
 
-int main(int argc, char** argv)
+static int main(int argc, char** argv);
+
+__attribute__((force_align_arg_pointer))
+void _start()
+{
+    asm("movq $0, %rbp; pushq %rbp; pushq %rbp; movq %rsp, %rbp; pushq %rsi; pushq %rdi");
+
+    SDL_SetMainReady();
+
+    asm("popq %rdi; popq %rsi");
+
+    asm("call %P0" : : "i"(main));
+
+    asm("mov $60,%rax; mov $0,%rdi; syscall");
+
+    __builtin_unreachable();
+}
+
+static long time(void)
+{
+    asm("pushq %rdi; mov $201, %rax; mov $0, %rdi; syscall; popq %rdi");
+}
+
+static int main(int argc, char** argv)
 {
     (void) argc;
     (void) argv;
 
     pcg32_random_t rng = PCG32_INITIALIZER;
-    pcg32_srandom_r(&rng, clock(), clock());
+    pcg32_srandom_r(&rng, time(), time());
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("SDL_Init(): %s", SDL_GetError());

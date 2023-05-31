@@ -4,6 +4,11 @@
         "functional": "c",
         "__locale": "c",
         "random": "c",
-        "algorithm": "c"
+        "algorithm": "c",
+        "config.h": "c",
+        "stdbool.h": "c",
+        "inttypes.h": "c",
+        "stdarg.h": "c",
+        "string.h": "c"
     }
 }

@@ -14,10 +14,18 @@ struct pong_ball
     SDL_Color color;
 };
 
+struct scoreboard
+{
+    uint32_t player_one;
+    uint32_t player_two;
+};
+
 struct game_state
 {
     SDL_Rect paddles[2];
     struct pong_ball ball;
+
+    struct scoreboard scoreboard;
 
     pcg32_random_t* rng;
 };

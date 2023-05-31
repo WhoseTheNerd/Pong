@@ -8,7 +8,7 @@ workspace "Pong"
 project "Pong"
     kind "ConsoleApp"
     language "C"
-    cdialect "c99"
+    cdialect "gnu99"
     staticruntime "on"
 
     targetdir "bin/%{cfg.buildcfg}"
@@ -26,9 +26,11 @@ project "Pong"
 
     links
     {
-        "SDL2",
-        "m"
+        "SDL2"
     }
+
+    buildoptions { "-nostdlib -fno-stack-protector" }
+    linkoptions { "-nostdlib -fno-stack-protector" }
 
     filter "configurations:Debug"      
         defines { "DEBUG" }      
