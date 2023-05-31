@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#include "stb_sprintf.h"
+
 static int RenderCircle(SDL_Renderer* renderer, SDL_Point center_point, int radius, SDL_Color color);
 
 static float to_radians(float degrees)
@@ -9,9 +11,11 @@ static float to_radians(float degrees)
     return degrees * (3.141592f / 180.0f);
 }
 
-bool game_init(struct game_state* game_state, pcg32_random_t* rng)
+bool game_init(struct game_state* game_state, pcg32_random_t* rng, SDL_Renderer* renderer, bool reset)
 {
-    game_state->rng = rng;
+    if (rng != NULL) {
+        game_state->rng = rng;
+    }
 
     game_state->paddles[0].x = 10;
     game_state->paddles[0].y = SCREEN_HEIGHT / 2 - (PADDLE_HEIGHT / 2);
@@ -51,13 +55,59 @@ bool game_init(struct game_state* game_state, pcg32_random_t* rng)
     game_state->ball.velocity.x *= speed;
     game_state->ball.velocity.y *= speed;
 
-    game_state->scoreboard.player_one = 0;
-    game_state->scoreboard.player_two = 0;
+    if (!reset) {
+        game_state->scoreboard.player_one = 0;
+        game_state->scoreboard.player_two = 0;
+    }
+
+    if (TTF_Init() != 0) {
+        SDL_Log("TTF_Init(): %s", TTF_GetError());
+        return false;
+    }
+
+    game_state->font = TTF_OpenFont("/usr/share/fonts/TTF/Roboto-Regular.ttf", 24);
+    if (game_state->font == NULL) {
+        SDL_Log("TTF_OpenFont(): %s", TTF_GetError());
+        TTF_Quit();
+        return false;
+    }
+
+    const SDL_Color white_color = {.r = 255, .g = 255, .b = 255, .a = SDL_ALPHA_OPAQUE};
+
+    char buffer[8] = {0};
+
+    stbsp_snprintf(buffer, COUNT_OF(buffer), "%03d", game_state->scoreboard.player_one);
+    game_state->player_score_surfaces[0] = TTF_RenderText_Solid(game_state->font, buffer, white_color);
+
+    stbsp_snprintf(buffer, COUNT_OF(buffer), "%03d", game_state->scoreboard.player_two);
+    game_state->player_score_surfaces[1] = TTF_RenderText_Solid(game_state->font, buffer, white_color);
+
+    game_state->player_score_textures[0] = SDL_CreateTextureFromSurface(renderer, game_state->player_score_surfaces[0]);
+    game_state->player_score_textures[1] = SDL_CreateTextureFromSurface(renderer, game_state->player_score_surfaces[1]);
+
+    game_state->player_score_rects[0].x = SCREEN_WIDTH / 2 - game_state->player_score_surfaces[0]->w - 16;
+    game_state->player_score_rects[0].y = 0;
+    game_state->player_score_rects[0].w = game_state->player_score_surfaces[0]->w;
+    game_state->player_score_rects[0].h = game_state->player_score_surfaces[0]->h;
+
+    game_state->player_score_rects[1].x = SCREEN_WIDTH / 2 + game_state->player_score_surfaces[1]->w - 16;
+    game_state->player_score_rects[1].y = 0;
+    game_state->player_score_rects[1].w = game_state->player_score_surfaces[1]->w;
+    game_state->player_score_rects[1].h = game_state->player_score_surfaces[1]->h;
 
     return true;
 }
 
-bool game_update(struct game_state* game_state)
+void game_free(struct game_state* game_state)
+{
+    SDL_FreeSurface(game_state->player_score_surfaces[0]);
+    SDL_FreeSurface(game_state->player_score_surfaces[1]);
+    SDL_DestroyTexture(game_state->player_score_textures[0]);
+    SDL_DestroyTexture(game_state->player_score_textures[1]);
+    TTF_Quit();
+}
+
+bool game_update(struct game_state* game_state, SDL_Renderer* renderer)
 {
     const uint8_t* kb_state = SDL_GetKeyboardState(NULL);
     if (kb_state[SDL_SCANCODE_W]) {
@@ -88,16 +138,16 @@ bool game_update(struct game_state* game_state)
     game_state->ball.position.y += game_state->ball.velocity.y;
 
     if (game_state->ball.position.x < PADDLE_WIDTH + BALL_RADIUS) {
-        // Player 1 scores
-        game_state->scoreboard.player_one += 1;
-        game_state->ball.velocity.x = 0;
-        game_state->ball.velocity.y = 0;
-    }
-    if (game_state->ball.position.x > SCREEN_WIDTH - PADDLE_WIDTH + BALL_RADIUS) {
         // Player 2 scores
         game_state->scoreboard.player_two += 1;
-        game_state->ball.velocity.x = 0;
-        game_state->ball.velocity.y = 0;
+        game_free(game_state);
+        game_init(game_state, NULL, renderer, true);
+    }
+    if (game_state->ball.position.x > SCREEN_WIDTH - PADDLE_WIDTH + BALL_RADIUS) {
+        // Player 1 scores
+        game_state->scoreboard.player_one += 1;
+        game_free(game_state);
+        game_init(game_state, NULL, renderer, true);
     } 
 
     if (game_state->ball.position.y > SCREEN_HEIGHT - BALL_RADIUS) {
@@ -155,10 +205,8 @@ bool game_render(SDL_Renderer* renderer, struct game_state* game_state)
         return false;
     }
 
-    if (SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE) != 0) {
-        SDL_Log("SDL_SetRenderDrawColor(): %s", SDL_GetError());
-        return false;
-    }
+    SDL_RenderCopy(renderer, game_state->player_score_textures[0], NULL, &game_state->player_score_rects[0]);
+    SDL_RenderCopy(renderer, game_state->player_score_textures[1], NULL, &game_state->player_score_rects[1]);
 
     SDL_RenderPresent(renderer);
 

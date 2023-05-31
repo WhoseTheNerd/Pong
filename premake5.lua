@@ -26,7 +26,8 @@ project "Pong"
 
     links
     {
-        "SDL2"
+        "SDL2",
+        "SDL2_ttf"
     }
 
     buildoptions { "-nostdlib -fno-stack-protector" }

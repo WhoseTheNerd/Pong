@@ -60,7 +60,7 @@ static int main(int argc, char** argv)
 
     struct game_state game_state = {0};
 
-    if (!game_init(&game_state, &rng)) {
+    if (!game_init(&game_state, &rng, renderer, false)) {
         SDL_Log("Failed to initialize game state!");
         goto cleanup;
     }
@@ -79,7 +79,7 @@ static int main(int argc, char** argv)
             }
         }
 
-        if (!game_update(&game_state)) {
+        if (!game_update(&game_state, renderer)) {
             SDL_Log("Failed to update the game state!");
             goto cleanup;
         }
