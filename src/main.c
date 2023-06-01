@@ -91,6 +91,8 @@ static int main(int argc, char** argv)
         
     }
 
+    game_free(&game_state);
+
 cleanup:
     SDL_DestroyRenderer(renderer);
 cleanup_2:

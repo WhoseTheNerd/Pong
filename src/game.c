@@ -104,6 +104,7 @@ void game_free(struct game_state* game_state)
     SDL_FreeSurface(game_state->player_score_surfaces[1]);
     SDL_DestroyTexture(game_state->player_score_textures[0]);
     SDL_DestroyTexture(game_state->player_score_textures[1]);
+    TTF_CloseFont(game_state->font);
     TTF_Quit();
 }
 
