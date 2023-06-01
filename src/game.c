@@ -65,7 +65,7 @@ bool game_init(struct game_state* game_state, pcg32_random_t* rng, SDL_Renderer*
         return false;
     }
 
-    game_state->font = TTF_OpenFont("/usr/share/fonts/TTF/Roboto-Regular.ttf", 24);
+    game_state->font = TTF_OpenFont("Roboto-Regular.ttf", 24);
     if (game_state->font == NULL) {
         SDL_Log("TTF_OpenFont(): %s", TTF_GetError());
         TTF_Quit();
