@@ -215,6 +215,11 @@ bool game_render(SDL_Renderer* renderer, struct game_state* game_state)
         return false;
     }
 
+    if (SDL_RenderDrawLine(renderer, SCREEN_WIDTH/2, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT) != 0) {
+        SDL_Log("SDL_RenderDrawLine(): %s", SDL_GetError());
+        return false;
+    }
+
     SDL_RenderPresent(renderer);
 
     return true;
